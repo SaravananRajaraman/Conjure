@@ -12,6 +12,10 @@
 /build
 /dist
 
+# playwright
+/e2e/results
+/playwright-report
+
 # test coverage
 /coverage
 

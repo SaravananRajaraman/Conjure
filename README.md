@@ -63,10 +63,22 @@ The app runs with no configuration at all — it falls back to the mock provider
 See [docs/providers.md](docs/providers.md) for details, including how local
 tool‑calling is normalized.
 
+## Screenshots
+
+See [docs/screenshots.md](docs/screenshots.md) for a full visual walkthrough with flow diagrams.
+
+| | |
+|---|---|
+| ![Light workspace](docs/screenshots/01-workspace-light.png) | ![Dark workspace](docs/screenshots/02-workspace-dark.png) |
+| Light theme — empty workspace | Dark theme — empty workspace |
+| ![Generating](docs/screenshots/07-generating.png) | ![Preview](docs/screenshots/08-preview.png) |
+| AI generating a component | Live preview after generation |
+
 ## Documentation
 
 | Doc | What's inside |
 |-----|---------------|
+| [docs/screenshots.md](docs/screenshots.md) | Visual walkthrough with Mermaid flow diagrams |
 | [docs/architecture.md](docs/architecture.md) | How the pieces fit: chat flow, virtual FS, tools, persistence |
 | [docs/features.md](docs/features.md) | Full feature tour: generation, projects, theming, watermark |
 | [docs/frameworks.md](docs/frameworks.md) | React / Vue / Angular support and how to add a framework |

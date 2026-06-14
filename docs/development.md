@@ -24,6 +24,8 @@ This installs dependencies, generates the Prisma client, and runs migrations
 | `npm run start` | Serve the production build |
 | `npm run lint` | ESLint |
 | `npm run test` | Run the Vitest suite |
+| `npm run test:e2e` | Run the full Playwright suite |
+| `npm run screenshots` | Capture demo screenshots → `docs/screenshots/` |
 | `npm run setup` | Install + generate Prisma client + migrate |
 | `npm run db:reset` | Reset the database (destructive) |
 
