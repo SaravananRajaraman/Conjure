@@ -1,0 +1,175 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { useFileSystem } from "@/lib/contexts/file-system-context";
+import { useFramework } from "@/lib/contexts/framework-context";
+import {
+  createImportMap,
+  createPreviewHTML,
+} from "@/lib/transform/jsx-transformer";
+import {
+  createVuePreviewHTML,
+  findVueEntry,
+} from "@/lib/transform/vue-transformer";
+import { AlertCircle } from "lucide-react";
+
+const PREVIEW_SANDBOX = "allow-scripts allow-same-origin allow-forms";
+
+export function PreviewFrame() {
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const { getAllFiles, refreshTrigger } = useFileSystem();
+  const { framework } = useFramework();
+  const [error, setError] = useState<string | null>(null);
+  const [entryPoint, setEntryPoint] = useState<string>("/App.jsx");
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
+
+  useEffect(() => {
+    const setSrcDoc = (html: string) => {
+      if (iframeRef.current) {
+        // Need both allow-scripts and allow-same-origin for blob URLs / module
+        // imports used by the preview runtimes.
+        iframeRef.current.setAttribute("sandbox", PREVIEW_SANDBOX);
+        iframeRef.current.srcdoc = html;
+        setError(null);
+      }
+    };
+
+    const updatePreview = () => {
+      try {
+        const files = getAllFiles();
+
+        // Clear error first when we have files
+        if (files.size > 0 && error) {
+          setError(null);
+        }
+
+        if (files.size === 0) {
+          setError(isFirstLoad ? "firstLoad" : "No files to preview");
+          return;
+        }
+
+        // We have files, so it's no longer the first load
+        if (isFirstLoad) {
+          setIsFirstLoad(false);
+        }
+
+        // --- Vue: compile single-file components inside the iframe ---
+        if (framework === "vue") {
+          const vueEntry = findVueEntry(files);
+          if (!vueEntry) {
+            setError(
+              "No Vue component found. Create an App.vue file to get started."
+            );
+            return;
+          }
+          setSrcDoc(createVuePreviewHTML(files, vueEntry));
+          return;
+        }
+
+        // --- React (default): transform JSX and wire an import map ---
+        let foundEntryPoint = entryPoint;
+        const possibleEntries = [
+          "/App.jsx",
+          "/App.tsx",
+          "/index.jsx",
+          "/index.tsx",
+          "/src/App.jsx",
+          "/src/App.tsx",
+        ];
+
+        if (!files.has(entryPoint)) {
+          const found = possibleEntries.find((path) => files.has(path));
+          if (found) {
+            foundEntryPoint = found;
+            setEntryPoint(found);
+          } else {
+            const firstJSX = Array.from(files.keys()).find(
+              (path) => path.endsWith(".jsx") || path.endsWith(".tsx")
+            );
+            if (firstJSX) {
+              foundEntryPoint = firstJSX;
+              setEntryPoint(firstJSX);
+            }
+          }
+        }
+
+        if (!foundEntryPoint || !files.has(foundEntryPoint)) {
+          setError(
+            "No React component found. Create an App.jsx or index.jsx file to get started."
+          );
+          return;
+        }
+
+        const { importMap, styles, errors } = createImportMap(files);
+        setSrcDoc(
+          createPreviewHTML(foundEntryPoint, importMap, styles, errors)
+        );
+      } catch (err) {
+        console.error("Preview error:", err);
+        setError(err instanceof Error ? err.message : "Unknown preview error");
+      }
+    };
+
+    updatePreview();
+  }, [refreshTrigger, getAllFiles, entryPoint, error, isFirstLoad, framework]);
+
+  if (error) {
+    if (error === "firstLoad") {
+      return (
+        <div className="h-full flex items-center justify-center p-8 bg-muted/20">
+          <div className="text-center max-w-md">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-violet-500/15 to-sky-500/15 mb-4">
+              <svg
+                className="h-8 w-8 text-sky-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M13 10V3L4 14h7v7l9-11h-7z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              Welcome to Conjure
+            </h3>
+            <p className="text-sm text-muted-foreground mb-3">
+              Start building components with AI assistance
+            </p>
+            <p className="text-xs text-muted-foreground/80">
+              Ask the AI to create your first component to see it live here
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="h-full flex items-center justify-center p-8 bg-muted/20">
+        <div className="text-center max-w-md">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+            <AlertCircle className="h-8 w-8 text-muted-foreground" />
+          </div>
+          <h3 className="text-lg font-semibold text-foreground mb-2">
+            No Preview Available
+          </h3>
+          <p className="text-sm text-muted-foreground">{error}</p>
+          <p className="text-xs text-muted-foreground/80 mt-2">
+            Start by creating a component using the AI assistant
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <iframe
+      ref={iframeRef}
+      className="w-full h-full border-0 bg-white"
+      title="Preview"
+    />
+  );
+}

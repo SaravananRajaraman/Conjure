@@ -1,0 +1,56 @@
+# dependencies
+/node_modules
+
+# next.js build output
+/.next/
+/out/
+
+# turbopack / turborepo cache
+.turbo/
+
+# production builds
+/build
+/dist
+
+# test coverage
+/coverage
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# generated prisma client (regenerated via `npm run setup` / `prisma generate`)
+/src/generated
+
+# database
+prisma/*.db
+prisma/*.db-journal
+prisma/*.db-wal
+prisma/*.db-shm
+
+# env files (keep .env.example committed)
+.env
+.env*.local
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+logs.txt
+logs-err.txt
+
+# os files
+.DS_Store
+Thumbs.db
+
+# editors
+.idea/
+.vscode/
+*.swp
+
+# claude code — CLAUDE.md is project docs and SHOULD be committed
+# CLAUDE.local.md and local settings are personal/machine-specific
+CLAUDE.local.md
+.claude/settings.local.json
